@@ -1,0 +1,15 @@
+[Unit]
+Description=Bet Manage FastAPI service
+After=network.target postgresql.service
+
+[Service]
+User=betmanage
+Group=betmanage
+WorkingDirectory=/opt/bet_manage/backend
+EnvironmentFile=/etc/bet-manage.env
+ExecStart=/opt/bet_manage/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+bet_manage.db
+htmlcov/
+node_modules/
+dist/
+.DS_Store
