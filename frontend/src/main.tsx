@@ -275,7 +275,7 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
       method: "POST",
       body: JSON.stringify({
         ...draft,
-        placed_at: draft.placed_at ? new Date(draft.placed_at).toISOString() : new Date().toISOString(),
+        placed_at: draft.placed_at ? new Date(`${draft.placed_at}T00:00:00`).toISOString() : new Date().toISOString(),
         tag_names: draft.tag_names.split(",").map((tag) => tag.trim()).filter(Boolean),
         legs
       })
@@ -301,11 +301,11 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
     <div className="ledger-grid">
       <form className="panel bet-form" onSubmit={createBet}>
         <h2><Plus size={18} /> 新增投注</h2>
+        <label>投注日期<input type="date" value={draft.placed_at} onChange={(event) => setDraft({ ...draft, placed_at: event.target.value })} /></label>
         <div className="form-row">
           <label>类型<select value={draft.kind} onChange={(event) => setDraft({ ...draft, kind: event.target.value as BetKind })}><option value="single">单注</option><option value="parlay">串关</option></select></label>
           <label>运动<input value={draft.sport} onChange={(event) => setDraft({ ...draft, sport: event.target.value })} /></label>
         </div>
-        <label>投注日期<input type="datetime-local" value={draft.placed_at} onChange={(event) => setDraft({ ...draft, placed_at: event.target.value })} /></label>
         <label>赛事<input required value={draft.event_name} onChange={(event) => setDraft({ ...draft, event_name: event.target.value })} /></label>
         <div className="form-row">
           <label>盘口<input required value={draft.market} onChange={(event) => setDraft({ ...draft, market: event.target.value })} /></label>
