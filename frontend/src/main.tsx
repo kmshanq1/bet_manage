@@ -568,11 +568,12 @@ function StatsPanel({ stats, bets }: { stats: Stats | null; bets: Bet[] }) {
   const chartData = dailyChartData(bets);
   const maxDailyCount = Math.max(...chartData.map((day) => day.football + day.basketball), 1);
   const maxProfit = Math.max(...chartData.map((day) => Math.abs(day.profit)), 1);
-  const linePoints = chartData.map((day, index) => {
+  const lineData = chartData.map((day, index) => {
     const x = chartData.length === 1 ? 0 : (index / (chartData.length - 1)) * 100;
     const y = 50 - (day.profit / maxProfit) * 42;
-    return `${x},${y}`;
-  }).join(" ");
+    return { day, x, y };
+  });
+  const linePoints = lineData.map((point) => `${point.x},${point.y}`).join(" ");
   const winRateItems = [
     { label: "总胜率", value: summarizeWinRate(bets) },
     { label: "足球", value: summarizeWinRate(bets.filter((bet) => bet.sport === "足球")) },
@@ -642,10 +643,28 @@ function StatsPanel({ stats, bets }: { stats: Stats | null; bets: Bet[] }) {
       </div>
       <div className="chart-card profit-line-card">
         <h2>20天总盈亏</h2>
-        <svg className="profit-line" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <line x1="0" x2="100" y1="50" y2="50" />
-          <polyline points={linePoints} />
-        </svg>
+        <div className="profit-chart">
+          <div className="profit-y-axis">
+            <span>{currency(maxProfit)}</span>
+            <span>{currency(0)}</span>
+            <span>{currency(-maxProfit)}</span>
+          </div>
+          <div className="profit-plot">
+            <svg className="profit-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <line x1="0" x2="100" y1="50" y2="50" />
+              <polyline points={linePoints} />
+            </svg>
+            {lineData.map((point) => (
+              <span
+                aria-label={`${point.day.label} 盈亏 ${currency(point.day.profit)}`}
+                className="profit-point"
+                key={point.day.key}
+                style={{ left: `${point.x}%`, top: `${point.y}%` }}
+                title={`${point.day.label} 盈亏 ${currency(point.day.profit)}`}
+              />
+            ))}
+          </div>
+        </div>
         <div className="line-axis">
           {chartData.map((day) => <small key={day.key}>{day.label}</small>)}
         </div>

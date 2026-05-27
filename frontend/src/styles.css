@@ -749,13 +749,38 @@ button:disabled {
   writing-mode: vertical-rl;
 }
 
-.profit-line {
+.profit-chart {
+  align-items: stretch;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 58px 1fr;
+}
+
+.profit-y-axis {
+  color: #69718a;
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  font-weight: 800;
+  height: 220px;
+  justify-content: space-between;
+  padding: 8px 0;
+  text-align: right;
+}
+
+.profit-plot {
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(224, 229, 243, 0.9);
   border-radius: 16px;
   height: 220px;
   overflow: visible;
   padding: 10px;
+  position: relative;
+}
+
+.profit-line {
+  display: block;
+  height: 100%;
   width: 100%;
 }
 
@@ -773,10 +798,28 @@ button:disabled {
   vector-effect: non-scaling-stroke;
 }
 
+.profit-point {
+  background: #5774df;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 6px 14px rgba(87, 116, 223, 0.28);
+  cursor: help;
+  height: 10px;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 10px;
+}
+
+.profit-point:hover {
+  background: #3c57c7;
+  transform: translate(-50%, -50%) scale(1.35);
+}
+
 .line-axis {
   display: grid;
   gap: 6px;
   grid-template-columns: repeat(20, minmax(14px, 1fr));
+  margin-left: 68px;
   margin-top: 8px;
   text-align: center;
 }
