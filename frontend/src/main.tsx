@@ -106,7 +106,7 @@ const statusLabels: Record<BetStatus, string> = {
 
 const emptyDraft: BetDraft = {
   kind: "single",
-  sport: "football",
+  sport: "足球",
   placed_at: "",
   event_name: "",
   market: "",
@@ -304,7 +304,7 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
         <label>投注日期<input type="date" value={draft.placed_at} onChange={(event) => setDraft({ ...draft, placed_at: event.target.value })} /></label>
         <div className="form-row">
           <label>类型<select value={draft.kind} onChange={(event) => setDraft({ ...draft, kind: event.target.value as BetKind })}><option value="single">单注</option><option value="parlay">串关</option></select></label>
-          <label>运动<input value={draft.sport} onChange={(event) => setDraft({ ...draft, sport: event.target.value })} /></label>
+          <label>比赛类型<select value={draft.sport} onChange={(event) => setDraft({ ...draft, sport: event.target.value })}><option value="足球">足球</option><option value="篮球">篮球</option><option value="其他">其他</option></select></label>
         </div>
         <label>赛事<input required value={draft.event_name} onChange={(event) => setDraft({ ...draft, event_name: event.target.value })} /></label>
         <div className="form-row">
