@@ -88,7 +88,21 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-Then visit `http://your-intranet-host`.
+Then visit `https://your-intranet-host`.
+
+For an IP-only intranet deployment, create a self-signed certificate before reloading Nginx:
+
+```bash
+sudo mkdir -p /etc/nginx/ssl
+sudo openssl req -x509 -nodes -days 825 -newkey rsa:2048 \
+  -keyout /etc/nginx/ssl/bet_manage.key \
+  -out /etc/nginx/ssl/bet_manage.crt \
+  -subj '/CN=10.0.0.251' \
+  -addext 'subjectAltName=IP:10.0.0.251,DNS:ubuntu251'
+sudo chmod 600 /etc/nginx/ssl/bet_manage.key
+```
+
+Browsers will warn about self-signed certificates unless the certificate is imported into the client's trusted root store.
 
 ## Operations
 
