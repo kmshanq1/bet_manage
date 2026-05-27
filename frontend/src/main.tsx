@@ -118,6 +118,15 @@ function calculateDraftProfit(stakeValue: string, oddsValue: string, status: Bet
   return profit.toFixed(2);
 }
 
+function formatBetDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}/${month}/${day}`;
+}
+
 const statusLabels: Record<BetStatus, string> = {
   pending: "待结算",
   won: "赢",
@@ -294,8 +303,16 @@ function Login({ onLogin }: { onLogin: (token: string) => void }) {
 
 function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<typeof api>; reload: () => Promise<void> }) {
   const [draft, setDraft] = useState<BetDraft>(() => createEmptyDraft());
-  const [review, setReview] = useState<Record<number, string>>({});
+  const [pageSize, setPageSize] = useState(20);
+  const [page, setPage] = useState(1);
   const draftProfit = calculateDraftProfit(draft.stake, draft.odds, draft.status);
+  const totalPages = Math.max(1, Math.ceil(bets.length / pageSize));
+  const visibleBets = bets.slice((page - 1) * pageSize, page * pageSize);
+  const totalProfit = bets.reduce((sum, bet) => sum + Number(bet.profit || 0), 0);
+
+  useEffect(() => {
+    setPage((currentPage) => Math.min(currentPage, totalPages));
+  }, [totalPages]);
 
   async function createBet(event: React.FormEvent) {
     event.preventDefault();
@@ -326,14 +343,6 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
     await reload();
   }
 
-  async function saveReview(bet: Bet) {
-    await request(`/bets/${bet.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ post_match_review: review[bet.id] ?? bet.post_match_review ?? "" })
-    });
-    await reload();
-  }
-
   return (
     <div className="ledger-grid">
       <form className="panel bet-form" onSubmit={createBet}>
@@ -358,34 +367,57 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
       </form>
 
       <section className="panel table-panel">
-        <h2><Activity size={18} /> 记录</h2>
-        <div className="table">
-          {bets.map((bet) => (
-            <article className="bet-row" key={bet.id}>
-              <div>
-                <strong>{bet.event_name}</strong>
-                <span>{bet.sport} · {bet.market} · {bet.selection}</span>
-                <div className="chips">{bet.tag_names.map((tag) => <small key={tag}>{tag}</small>)}</div>
-              </div>
-              <div className="numbers">
-                <span>@ {bet.odds}</span>
-                <span>￥{bet.stake}</span>
-                <b className={Number(bet.profit || 0) >= 0 ? "positive" : "negative"}>{bet.profit ?? "-"}</b>
-              </div>
-              <div className="actions">
-                <select value={bet.status} onChange={(event) => settle(bet, event.target.value as BetStatus)}>
-                  {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                </select>
-              </div>
-              {bet.legs.length > 0 && <p className="legs">{bet.legs.map((leg) => `${leg.event_name} ${leg.selection}@${leg.odds}`).join(" / ")}</p>}
-              <textarea
-                placeholder="赛后复盘"
-                value={review[bet.id] ?? bet.post_match_review ?? ""}
-                onChange={(event) => setReview({ ...review, [bet.id]: event.target.value })}
-              />
-              <button className="secondary" type="button" onClick={() => saveReview(bet)}>保存复盘</button>
-            </article>
-          ))}
+        <div className="table-header">
+          <h2><Activity size={18} /> 记录</h2>
+          <label>每页<select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }}><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option><option value={100}>100</option></select></label>
+        </div>
+        <div className="ledger-table-wrap">
+          <table className="ledger-table">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>投注类型</th>
+                <th>比赛类型</th>
+                <th>赔率</th>
+                <th>金额</th>
+                <th>赛果</th>
+                <th>盈亏</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleBets.map((bet) => (
+                <tr key={bet.id}>
+                  <td>{formatBetDate(bet.placed_at)}</td>
+                  <td>{bet.market}</td>
+                  <td>{bet.sport}</td>
+                  <td>{bet.odds}</td>
+                  <td>￥{bet.stake}</td>
+                  <td>
+                    <select value={bet.status} onChange={(event) => settle(bet, event.target.value as BetStatus)}>
+                      {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                    </select>
+                  </td>
+                  <td className={Number(bet.profit || 0) >= 0 ? "positive" : "negative"}>{bet.profit ?? "-"}</td>
+                </tr>
+              ))}
+              {visibleBets.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="empty-cell">暂无记录</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="table-footer">
+          <div>
+            <strong>总投注手数：{bets.length}</strong>
+            <strong className={totalProfit >= 0 ? "positive" : "negative"}>总盈亏：￥{totalProfit.toFixed(2)}</strong>
+          </div>
+          <div className="pager">
+            <button className="secondary" type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>上一页</button>
+            <span>{page} / {totalPages}</span>
+            <button className="secondary" type="button" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>下一页</button>
+          </div>
         </div>
       </section>
     </div>

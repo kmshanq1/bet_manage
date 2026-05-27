@@ -213,34 +213,100 @@ textarea {
   gap: 12px;
 }
 
-.table {
-  display: grid;
+.table-header,
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
 }
 
-.bet-row {
+.table-header h2 {
+  margin: 0;
+}
+
+.table-header label {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.table-header select {
+  min-height: 36px;
+  min-width: 82px;
+}
+
+.ledger-table-wrap {
   border: 1px solid #dde2dd;
   border-radius: 8px;
-  padding: 14px;
-  display: grid;
-  grid-template-columns: minmax(220px, 1fr) 120px 140px;
-  gap: 12px;
-  align-items: start;
+  margin-top: 14px;
+  overflow-x: auto;
 }
 
-.bet-row strong,
-.bet-row span {
-  display: block;
+.ledger-table {
+  border-collapse: collapse;
+  min-width: 760px;
+  width: 100%;
 }
 
-.bet-row span {
-  color: #617080;
+.ledger-table th,
+.ledger-table td {
+  border-bottom: 1px solid #edf0ed;
+  padding: 10px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ledger-table th {
+  background: #f4f7f4;
+  color: #53616d;
   font-size: 13px;
-  margin-top: 4px;
+  font-weight: 700;
 }
 
-.numbers {
-  text-align: right;
+.ledger-table td {
+  color: #1d2a36;
+  font-size: 14px;
+}
+
+.ledger-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.ledger-table select {
+  min-height: 34px;
+  min-width: 92px;
+}
+
+.empty-cell {
+  color: #687584;
+  height: 96px;
+  text-align: center !important;
+}
+
+.table-footer {
+  border-top: 1px solid #edf0ed;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.table-footer > div,
+.pager {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.pager span {
+  color: #53616d;
+  min-width: 52px;
+  text-align: center;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .positive {
@@ -249,26 +315,6 @@ textarea {
 
 .negative {
   color: #be3b35;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.chips small {
-  background: #e6efec;
-  color: #1e6f68;
-  border-radius: 999px;
-  padding: 3px 8px;
-}
-
-.legs,
-.bet-row textarea,
-.bet-row .secondary {
-  grid-column: 1 / -1;
 }
 
 .stats-layout {
@@ -356,12 +402,18 @@ textarea {
     padding: 18px;
   }
 
-  .form-row,
-  .bet-row {
+  .form-row {
     grid-template-columns: 1fr;
   }
 
-  .numbers {
-    text-align: left;
+  .table-header,
+  .table-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .table-footer > div,
+  .pager {
+    justify-content: space-between;
   }
 }
