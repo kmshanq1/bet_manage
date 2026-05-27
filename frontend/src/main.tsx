@@ -317,12 +317,14 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
           <label>投注类型<select value={draft.market} onChange={(event) => setDraft({ ...draft, market: event.target.value })}><option value="欧盘">欧盘</option><option value="亚盘">亚盘</option><option value="大小">大小</option><option value="角球">角球</option><option value="其他">其他</option></select></label>
           <label>比赛类型<select value={draft.sport} onChange={(event) => setDraft({ ...draft, sport: event.target.value })}><option value="足球">足球</option><option value="篮球">篮球</option><option value="其他">其他</option></select></label>
         </div>
-        <label>信息来源<input value={draft.event_name} onChange={(event) => setDraft({ ...draft, event_name: event.target.value })} /></label>
         <div className="form-row">
           <label>赔率<input required type="number" step="0.001" value={draft.odds} onChange={(event) => setDraft({ ...draft, odds: event.target.value })} /></label>
           <label>金额<input required type="number" step="0.01" value={draft.stake} onChange={(event) => setDraft({ ...draft, stake: event.target.value })} /></label>
         </div>
-        <label>状态<select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as BetStatus })}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <div className="form-row">
+          <label>信息来源<input value={draft.event_name} onChange={(event) => setDraft({ ...draft, event_name: event.target.value })} /></label>
+          <label>状态<select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as BetStatus })}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        </div>
         <label>备注<textarea value={draft.pre_match_thoughts} onChange={(event) => setDraft({ ...draft, pre_match_thoughts: event.target.value })} /></label>
         {draft.kind === "parlay" && <label>串关明细<textarea placeholder="运动|赛事|盘口|选择|赔率，每行一个" value={draft.legs} onChange={(event) => setDraft({ ...draft, legs: event.target.value })} /></label>}
         <button className="primary" type="submit">保存投注</button>
