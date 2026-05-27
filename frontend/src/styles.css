@@ -563,6 +563,28 @@ button:disabled {
   font-weight: 900;
 }
 
+.win-rate-pies {
+  align-items: stretch;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+}
+
+.win-rate-item {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  min-width: 0;
+}
+
+.win-rate-item strong {
+  color: #151b2d;
+  font-size: 13px;
+  font-weight: 900;
+}
+
 .pie {
   --win: 0%;
   align-items: center;
@@ -572,23 +594,23 @@ button:disabled {
   border-radius: 50%;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72), 0 14px 24px rgba(76, 88, 145, 0.16);
   display: grid;
-  height: 132px;
+  height: 92px;
   justify-items: center;
-  width: 132px;
+  width: 92px;
 }
 
 .pie span {
   color: #151b2d;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
 }
 
 .win-rate-legend {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   color: #606a83;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -675,7 +697,8 @@ button:disabled {
   .admin-grid,
   .stats-layout,
   .stats-overview,
-  .period-cards {
+  .period-cards,
+  .win-rate-pies {
     grid-template-columns: 1fr;
   }
 

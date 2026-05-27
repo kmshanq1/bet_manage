@@ -535,9 +535,11 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
 function StatsPanel({ stats, bets }: { stats: Stats | null; bets: Bet[] }) {
   if (!stats) return null;
   const now = new Date();
-  const winRate = summarizeWinRate(bets);
-  const settledCount = winRate.wins + winRate.losses;
-  const winPercent = settledCount ? Math.round((winRate.wins / settledCount) * 100) : 0;
+  const winRateItems = [
+    { label: "总胜率", value: summarizeWinRate(bets) },
+    { label: "足球", value: summarizeWinRate(bets.filter((bet) => bet.sport === "足球")) },
+    { label: "篮球", value: summarizeWinRate(bets.filter((bet) => bet.sport === "篮球")) }
+  ];
   const periods = [
     { label: "当日", summary: summarizeBets(bets, startOfDay(now)) },
     { label: "本周", summary: summarizeBets(bets, startOfWeek(now)) },
@@ -560,12 +562,23 @@ function StatsPanel({ stats, bets }: { stats: Stats | null; bets: Bet[] }) {
         </div>
         <div className="win-rate-card">
           <h2>胜率</h2>
-          <div className="pie" style={{ "--win": `${winPercent}%` } as React.CSSProperties}>
-            <span>{winPercent}%</span>
-          </div>
-          <div className="win-rate-legend">
-            <span><i className="win-dot" />赢 {winRate.wins}</span>
-            <span><i className="loss-dot" />输 {winRate.losses}</span>
+          <div className="win-rate-pies">
+            {winRateItems.map((item) => {
+              const settledCount = item.value.wins + item.value.losses;
+              const winPercent = settledCount ? Math.round((item.value.wins / settledCount) * 100) : 0;
+              return (
+                <div className="win-rate-item" key={item.label}>
+                  <strong>{item.label}</strong>
+                  <div className="pie" style={{ "--win": `${winPercent}%` } as React.CSSProperties}>
+                    <span>{winPercent}%</span>
+                  </div>
+                  <div className="win-rate-legend">
+                    <span><i className="win-dot" />赢 {item.value.wins}</span>
+                    <span><i className="loss-dot" />输 {item.value.losses}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
