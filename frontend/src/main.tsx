@@ -275,8 +275,9 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
       method: "POST",
       body: JSON.stringify({
         ...draft,
+        selection: draft.selection || "-",
         placed_at: draft.placed_at ? new Date(`${draft.placed_at}T00:00:00`).toISOString() : new Date().toISOString(),
-        tag_names: draft.tag_names.split(",").map((tag) => tag.trim()).filter(Boolean),
+        tag_names: [],
         legs
       })
     });
@@ -307,7 +308,6 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
           <label>比赛类型<select value={draft.sport} onChange={(event) => setDraft({ ...draft, sport: event.target.value })}><option value="足球">足球</option><option value="篮球">篮球</option><option value="其他">其他</option></select></label>
         </div>
         <label>信息来源<input value={draft.event_name} onChange={(event) => setDraft({ ...draft, event_name: event.target.value })} /></label>
-        <label>选择<input required value={draft.selection} onChange={(event) => setDraft({ ...draft, selection: event.target.value })} /></label>
         <div className="form-row">
           <label>赔率<input required type="number" step="0.001" value={draft.odds} onChange={(event) => setDraft({ ...draft, odds: event.target.value })} /></label>
           <label>金额<input required type="number" step="0.01" value={draft.stake} onChange={(event) => setDraft({ ...draft, stake: event.target.value })} /></label>
@@ -316,8 +316,7 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
           <label>平台<input value={draft.platform} onChange={(event) => setDraft({ ...draft, platform: event.target.value })} /></label>
           <label>状态<select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as BetStatus })}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         </div>
-        <label>标签<input placeholder="主场, 强队, 临场" value={draft.tag_names} onChange={(event) => setDraft({ ...draft, tag_names: event.target.value })} /></label>
-        <label>赛前理由<textarea value={draft.pre_match_thoughts} onChange={(event) => setDraft({ ...draft, pre_match_thoughts: event.target.value })} /></label>
+        <label>备注<textarea value={draft.pre_match_thoughts} onChange={(event) => setDraft({ ...draft, pre_match_thoughts: event.target.value })} /></label>
         {draft.kind === "parlay" && <label>串关明细<textarea placeholder="运动|赛事|盘口|选择|赔率，每行一个" value={draft.legs} onChange={(event) => setDraft({ ...draft, legs: event.target.value })} /></label>}
         <button className="primary" type="submit">保存投注</button>
       </form>
