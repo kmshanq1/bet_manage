@@ -109,7 +109,7 @@ const emptyDraft: BetDraft = {
   sport: "足球",
   placed_at: "",
   event_name: "",
-  market: "",
+  market: "欧盘",
   selection: "",
   odds: "1.900",
   stake: "100",
@@ -303,14 +303,11 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
         <h2><Plus size={18} /> 新增投注</h2>
         <label>投注日期<input type="date" value={draft.placed_at} onChange={(event) => setDraft({ ...draft, placed_at: event.target.value })} /></label>
         <div className="form-row">
-          <label>类型<select value={draft.kind} onChange={(event) => setDraft({ ...draft, kind: event.target.value as BetKind })}><option value="single">单注</option><option value="parlay">串关</option></select></label>
+          <label>投注类型<select value={draft.market} onChange={(event) => setDraft({ ...draft, market: event.target.value })}><option value="欧盘">欧盘</option><option value="亚盘">亚盘</option><option value="大小">大小</option><option value="角球">角球</option><option value="其他">其他</option></select></label>
           <label>比赛类型<select value={draft.sport} onChange={(event) => setDraft({ ...draft, sport: event.target.value })}><option value="足球">足球</option><option value="篮球">篮球</option><option value="其他">其他</option></select></label>
         </div>
         <label>赛事<input required value={draft.event_name} onChange={(event) => setDraft({ ...draft, event_name: event.target.value })} /></label>
-        <div className="form-row">
-          <label>盘口<input required value={draft.market} onChange={(event) => setDraft({ ...draft, market: event.target.value })} /></label>
-          <label>选择<input required value={draft.selection} onChange={(event) => setDraft({ ...draft, selection: event.target.value })} /></label>
-        </div>
+        <label>选择<input required value={draft.selection} onChange={(event) => setDraft({ ...draft, selection: event.target.value })} /></label>
         <div className="form-row">
           <label>赔率<input required type="number" step="0.001" value={draft.odds} onChange={(event) => setDraft({ ...draft, odds: event.target.value })} /></label>
           <label>金额<input required type="number" step="0.01" value={draft.stake} onChange={(event) => setDraft({ ...draft, stake: event.target.value })} /></label>
