@@ -185,6 +185,10 @@ function currency(value: number) {
   return `￥${value.toFixed(2)}`;
 }
 
+function selectInputText(event: React.FocusEvent<HTMLInputElement>) {
+  event.currentTarget.select();
+}
+
 const statusLabels: Record<BetStatus, string> = {
   pending: "待结算",
   won: "赢",
@@ -379,6 +383,7 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
   async function createBet(event: React.FormEvent) {
     event.preventDefault();
     if (!draft.status) return;
+    if (Number(draft.odds) <= 0 || Number(draft.stake) <= 0) return;
     const legs = draft.kind === "parlay"
       ? draft.legs.split("\n").filter(Boolean).map((line) => {
           const [sport, event_name, market, selection, odds] = line.split("|").map((item) => item.trim());
@@ -414,6 +419,7 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
 
   async function saveEdit(bet: Bet) {
     if (!editDraft) return;
+    if (Number(editDraft.odds) <= 0 || Number(editDraft.stake) <= 0) return;
     await request(`/bets/${bet.id}`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -444,8 +450,8 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
           <label>比赛类型<select value={draft.sport} onChange={(event) => setDraft({ ...draft, sport: event.target.value })}><option value="足球">足球</option><option value="篮球">篮球</option><option value="其他">其他</option></select></label>
         </div>
         <div className="form-row">
-          <label>赔率<input required type="number" step="0.001" value={draft.odds} onChange={(event) => setDraft({ ...draft, odds: event.target.value })} /></label>
-          <label>金额<input required type="number" step="0.01" value={draft.stake} onChange={(event) => setDraft({ ...draft, stake: event.target.value })} /></label>
+          <label>赔率<input required min="0.001" type="number" step="0.001" value={draft.odds} onFocus={selectInputText} onChange={(event) => setDraft({ ...draft, odds: event.target.value })} /></label>
+          <label>金额<input required min="0.01" type="number" step="0.01" value={draft.stake} onFocus={selectInputText} onChange={(event) => setDraft({ ...draft, stake: event.target.value })} /></label>
         </div>
         <div className="form-row">
           <label>信息来源<input value={draft.event_name} onChange={(event) => setDraft({ ...draft, event_name: event.target.value })} /></label>
@@ -484,8 +490,8 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
                     <td>{isEditing ? <input required type="date" value={editDraft.placed_at} onChange={(event) => setEditDraft({ ...editDraft, placed_at: event.target.value })} /> : formatBetDate(bet.placed_at)}</td>
                     <td>{isEditing ? <select value={editDraft.market} onChange={(event) => setEditDraft({ ...editDraft, market: event.target.value })}><option value="欧盘">欧盘</option><option value="亚盘">亚盘</option><option value="大小">大小</option><option value="角球">角球</option><option value="其他">其他</option></select> : bet.market}</td>
                     <td>{isEditing ? <select value={editDraft.sport} onChange={(event) => setEditDraft({ ...editDraft, sport: event.target.value })}><option value="足球">足球</option><option value="篮球">篮球</option><option value="其他">其他</option></select> : bet.sport}</td>
-                    <td>{isEditing ? <input required type="number" step="0.001" value={editDraft.odds} onChange={(event) => setEditDraft({ ...editDraft, odds: event.target.value })} /> : bet.odds}</td>
-                    <td>{isEditing ? <input required type="number" step="0.01" value={editDraft.stake} onChange={(event) => setEditDraft({ ...editDraft, stake: event.target.value })} /> : `￥${bet.stake}`}</td>
+                    <td>{isEditing ? <input required min="0.001" type="number" step="0.001" value={editDraft.odds} onFocus={selectInputText} onChange={(event) => setEditDraft({ ...editDraft, odds: event.target.value })} /> : bet.odds}</td>
+                    <td>{isEditing ? <input required min="0.01" type="number" step="0.01" value={editDraft.stake} onFocus={selectInputText} onChange={(event) => setEditDraft({ ...editDraft, stake: event.target.value })} /> : `￥${bet.stake}`}</td>
                     <td>{isEditing ? <select value={editDraft.status} onChange={(event) => setEditDraft({ ...editDraft, status: event.target.value as BetStatus })}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : statusLabels[bet.status]}</td>
                     <td className={Number(bet.profit || 0) >= 0 ? "positive" : "negative"}>{bet.profit ?? "-"}</td>
                     <td>
