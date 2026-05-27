@@ -306,7 +306,7 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
           <label>投注类型<select value={draft.market} onChange={(event) => setDraft({ ...draft, market: event.target.value })}><option value="欧盘">欧盘</option><option value="亚盘">亚盘</option><option value="大小">大小</option><option value="角球">角球</option><option value="其他">其他</option></select></label>
           <label>比赛类型<select value={draft.sport} onChange={(event) => setDraft({ ...draft, sport: event.target.value })}><option value="足球">足球</option><option value="篮球">篮球</option><option value="其他">其他</option></select></label>
         </div>
-        <label>赛事<input required value={draft.event_name} onChange={(event) => setDraft({ ...draft, event_name: event.target.value })} /></label>
+        <label>信息来源<input value={draft.event_name} onChange={(event) => setDraft({ ...draft, event_name: event.target.value })} /></label>
         <label>选择<input required value={draft.selection} onChange={(event) => setDraft({ ...draft, selection: event.target.value })} /></label>
         <div className="form-row">
           <label>赔率<input required type="number" step="0.001" value={draft.odds} onChange={(event) => setDraft({ ...draft, odds: event.target.value })} /></label>
