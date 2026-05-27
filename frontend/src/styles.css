@@ -246,7 +246,7 @@ textarea {
 
 .ledger-table {
   border-collapse: collapse;
-  min-width: 760px;
+  min-width: 980px;
   width: 100%;
 }
 
@@ -274,9 +274,39 @@ textarea {
   border-bottom: 0;
 }
 
+.ledger-table input,
 .ledger-table select {
   min-height: 34px;
   min-width: 92px;
+  padding: 7px 8px;
+}
+
+.ledger-table input[type="number"] {
+  min-width: 86px;
+  width: 96px;
+}
+
+.ledger-table input[type="date"] {
+  min-width: 132px;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.row-actions button {
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.danger {
+  background: #fff4f2;
+  border: 1px solid #e4b1aa;
+  border-radius: 6px;
+  color: #b5352f;
+  cursor: pointer;
+  font-weight: 700;
 }
 
 .empty-cell {

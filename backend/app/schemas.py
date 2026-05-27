@@ -84,6 +84,12 @@ class BetCreate(BetBase):
 
 
 class BetUpdate(BaseModel):
+    sport: str | None = None
+    event_name: str | None = None
+    market: str | None = None
+    odds: Decimal | None = Field(default=None, gt=0)
+    stake: Decimal | None = Field(default=None, gt=0)
+    placed_at: datetime | None = None
     status: BetStatus | None = None
     payout: Decimal | None = None
     profit: Decimal | None = None

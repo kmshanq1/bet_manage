@@ -58,13 +58,24 @@ def get_bet(bet_id: int, current_user: User = Depends(get_current_user), db: Ses
 @router.patch("/{bet_id}", response_model=BetRead)
 def update_bet(bet_id: int, payload: BetUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     bet = load_bet(db, bet_id, current_user)
+    recalculation_fields_changed = False
+    for field in ("sport", "event_name", "market", "placed_at"):
+        value = getattr(payload, field)
+        if value is not None:
+            setattr(bet, field, value)
+    for field in ("odds", "stake"):
+        value = getattr(payload, field)
+        if value is not None:
+            setattr(bet, field, value)
+            recalculation_fields_changed = True
     if payload.status is not None:
         bet.status = payload.status
+        recalculation_fields_changed = True
     if payload.payout is not None:
         bet.payout = payload.payout
     if payload.profit is not None:
         bet.profit = payload.profit
-    elif payload.status is not None or payload.payout is not None:
+    elif recalculation_fields_changed or payload.payout is not None:
         bet.payout, bet.profit = calculate_profit(bet.status, bet.stake, bet.odds, payload.payout)
     for field in ("pre_match_thoughts", "post_match_review", "mistake_category", "confidence"):
         value = getattr(payload, field)

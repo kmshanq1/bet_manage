@@ -83,3 +83,37 @@ def test_parlay_requires_legs_and_stats(client):
     stats = client.get("/api/stats", headers=admin_headers).json()
     assert stats["bets"] == 1
     assert stats["profit"] == "-50.00"
+
+
+def test_update_bet_fields_recalculates_profit_and_delete(client):
+    create_admin(client)
+    admin_headers = auth_header(client, "admin", "admin123456")
+    payload = {
+        "kind": "single",
+        "sport": "football",
+        "event_name": "Source",
+        "market": "欧盘",
+        "selection": "-",
+        "odds": "2.000",
+        "stake": "100.00",
+        "placed_at": datetime.utcnow().isoformat(),
+        "status": "won",
+    }
+    created = client.post("/api/bets", json=payload, headers=admin_headers)
+    assert created.status_code == 201
+    bet_id = created.json()["id"]
+
+    updated = client.patch(
+        f"/api/bets/{bet_id}",
+        json={"sport": "basketball", "market": "亚盘", "odds": "1.500", "stake": "200.00", "status": "half_won"},
+        headers=admin_headers,
+    )
+    assert updated.status_code == 200
+    body = updated.json()
+    assert body["sport"] == "basketball"
+    assert body["market"] == "亚盘"
+    assert body["profit"] == "50.00"
+
+    deleted = client.delete(f"/api/bets/{bet_id}", headers=admin_headers)
+    assert deleted.status_code == 204
+    assert client.get("/api/bets", headers=admin_headers).json() == []

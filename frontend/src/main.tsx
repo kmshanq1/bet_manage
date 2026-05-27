@@ -95,6 +95,14 @@ type BetDraft = {
 };
 
 type BetDraftStatus = BetStatus | "";
+type BetEditDraft = {
+  placed_at: string;
+  market: string;
+  sport: string;
+  odds: string;
+  stake: string;
+  status: BetStatus;
+};
 
 function todayDateInputValue() {
   const now = new Date();
@@ -125,6 +133,15 @@ function formatBetDate(value: string) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}/${month}/${day}`;
+}
+
+function formatDateInput(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return todayDateInputValue();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 const statusLabels: Record<BetStatus, string> = {
@@ -305,6 +322,8 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
   const [draft, setDraft] = useState<BetDraft>(() => createEmptyDraft());
   const [pageSize, setPageSize] = useState(20);
   const [page, setPage] = useState(1);
+  const [editingBetId, setEditingBetId] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState<BetEditDraft | null>(null);
   const draftProfit = calculateDraftProfit(draft.stake, draft.odds, draft.status);
   const totalPages = Math.max(1, Math.ceil(bets.length / pageSize));
   const visibleBets = bets.slice((page - 1) * pageSize, page * pageSize);
@@ -338,8 +357,37 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
     await reload();
   }
 
-  async function settle(bet: Bet, status: BetStatus) {
-    await request(`/bets/${bet.id}`, { method: "PATCH", body: JSON.stringify({ status }) });
+  function beginEdit(bet: Bet) {
+    setEditingBetId(bet.id);
+    setEditDraft({
+      placed_at: formatDateInput(bet.placed_at),
+      market: bet.market,
+      sport: bet.sport,
+      odds: bet.odds,
+      stake: bet.stake,
+      status: bet.status
+    });
+  }
+
+  async function saveEdit(bet: Bet) {
+    if (!editDraft) return;
+    await request(`/bets/${bet.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        ...editDraft,
+        placed_at: new Date(`${editDraft.placed_at}T00:00:00`).toISOString()
+      })
+    });
+    setEditingBetId(null);
+    setEditDraft(null);
+    await reload();
+  }
+
+  async function deleteBet(bet: Bet) {
+    if (!window.confirm("确定删除这条记录吗？")) return;
+    await request(`/bets/${bet.id}`, { method: "DELETE" });
+    setEditingBetId(null);
+    setEditDraft(null);
     await reload();
   }
 
@@ -382,27 +430,38 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
                 <th>金额</th>
                 <th>赛果</th>
                 <th>盈亏</th>
+                <th>操作</th>
               </tr>
             </thead>
             <tbody>
-              {visibleBets.map((bet) => (
-                <tr key={bet.id}>
-                  <td>{formatBetDate(bet.placed_at)}</td>
-                  <td>{bet.market}</td>
-                  <td>{bet.sport}</td>
-                  <td>{bet.odds}</td>
-                  <td>￥{bet.stake}</td>
-                  <td>
-                    <select value={bet.status} onChange={(event) => settle(bet, event.target.value as BetStatus)}>
-                      {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                    </select>
-                  </td>
-                  <td className={Number(bet.profit || 0) >= 0 ? "positive" : "negative"}>{bet.profit ?? "-"}</td>
-                </tr>
-              ))}
+              {visibleBets.map((bet) => {
+                const isEditing = editingBetId === bet.id && editDraft;
+                return (
+                  <tr key={bet.id}>
+                    <td>{isEditing ? <input required type="date" value={editDraft.placed_at} onChange={(event) => setEditDraft({ ...editDraft, placed_at: event.target.value })} /> : formatBetDate(bet.placed_at)}</td>
+                    <td>{isEditing ? <select value={editDraft.market} onChange={(event) => setEditDraft({ ...editDraft, market: event.target.value })}><option value="欧盘">欧盘</option><option value="亚盘">亚盘</option><option value="大小">大小</option><option value="角球">角球</option><option value="其他">其他</option></select> : bet.market}</td>
+                    <td>{isEditing ? <select value={editDraft.sport} onChange={(event) => setEditDraft({ ...editDraft, sport: event.target.value })}><option value="足球">足球</option><option value="篮球">篮球</option><option value="其他">其他</option></select> : bet.sport}</td>
+                    <td>{isEditing ? <input required type="number" step="0.001" value={editDraft.odds} onChange={(event) => setEditDraft({ ...editDraft, odds: event.target.value })} /> : bet.odds}</td>
+                    <td>{isEditing ? <input required type="number" step="0.01" value={editDraft.stake} onChange={(event) => setEditDraft({ ...editDraft, stake: event.target.value })} /> : `￥${bet.stake}`}</td>
+                    <td>{isEditing ? <select value={editDraft.status} onChange={(event) => setEditDraft({ ...editDraft, status: event.target.value as BetStatus })}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : statusLabels[bet.status]}</td>
+                    <td className={Number(bet.profit || 0) >= 0 ? "positive" : "negative"}>{bet.profit ?? "-"}</td>
+                    <td>
+                      {isEditing ? (
+                        <div className="row-actions">
+                          <button className="secondary" type="button" onClick={() => saveEdit(bet)}>保存</button>
+                          <button className="secondary" type="button" onClick={() => { setEditingBetId(null); setEditDraft(null); }}>取消</button>
+                          <button className="danger" type="button" onClick={() => deleteBet(bet)}>删除</button>
+                        </div>
+                      ) : (
+                        <button className="secondary" type="button" onClick={() => beginEdit(bet)}>编辑</button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {visibleBets.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="empty-cell">暂无记录</td>
+                  <td colSpan={8} className="empty-cell">暂无记录</td>
                 </tr>
               )}
             </tbody>
