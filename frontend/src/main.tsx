@@ -128,11 +128,9 @@ const statusLabels: Record<BetStatus, string> = {
   half_lost: "输半"
 };
 
-const resultLabels: Record<Exclude<BetStatus, "pending">, string> = {
+const resultLabels: Record<Exclude<BetStatus, "pending" | "pushed" | "void">, string> = {
   won: "赢",
   lost: "输",
-  pushed: "走水",
-  void: "取消",
   half_won: "赢半",
   half_lost: "输半"
 };
