@@ -485,12 +485,33 @@ button:disabled {
 
 .stats-layout {
   display: grid;
-  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
   gap: 16px;
 }
 
+.period-card {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(76, 88, 145, 0.16);
+  padding: 16px;
+  backdrop-filter: blur(18px);
+}
+
+.period-card h2 {
+  margin: 0 0 12px;
+  color: #151b2d;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.period-metrics {
+  display: grid;
+  gap: 10px;
+}
+
 .metric {
-  padding: 18px;
+  padding: 14px;
 }
 
 .metric span {
@@ -509,7 +530,7 @@ button:disabled {
 }
 
 .bucket {
-  grid-column: span 2;
+  grid-column: span 1;
 }
 
 .bucket-row,

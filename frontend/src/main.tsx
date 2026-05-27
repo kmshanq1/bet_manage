@@ -144,6 +144,36 @@ function formatDateInput(value: string) {
   return `${year}-${month}-${day}`;
 }
 
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function startOfWeek(date: Date) {
+  const start = startOfDay(date);
+  const day = start.getDay() || 7;
+  start.setDate(start.getDate() - day + 1);
+  return start;
+}
+
+function summarizeBets(bets: Bet[], from: Date) {
+  return bets.reduce(
+    (summary, bet) => {
+      const placedAt = new Date(bet.placed_at);
+      if (Number.isNaN(placedAt.getTime()) || placedAt < from) return summary;
+      return {
+        count: summary.count + 1,
+        stake: summary.stake + Number(bet.stake || 0),
+        profit: summary.profit + Number(bet.profit || 0)
+      };
+    },
+    { count: 0, stake: 0, profit: 0 }
+  );
+}
+
+function currency(value: number) {
+  return `￥${value.toFixed(2)}`;
+}
+
 const statusLabels: Record<BetStatus, string> = {
   pending: "待结算",
   won: "赢",
@@ -281,7 +311,7 @@ function App() {
 
         {message && <div className="notice">{message}</div>}
         {activeTab === "ledger" && <Ledger bets={bets} request={request} reload={loadAll} />}
-        {activeTab === "stats" && <StatsPanel stats={stats} />}
+        {activeTab === "stats" && <StatsPanel stats={stats} bets={bets} />}
         {activeTab === "admin" && me?.role === "admin" && <AdminPanel users={users} request={request} reload={loadAll} />}
       </main>
     </div>
@@ -485,14 +515,26 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
   );
 }
 
-function StatsPanel({ stats }: { stats: Stats | null }) {
+function StatsPanel({ stats, bets }: { stats: Stats | null; bets: Bet[] }) {
   if (!stats) return null;
+  const now = new Date();
+  const periods = [
+    { label: "单日", summary: summarizeBets(bets, startOfDay(now)) },
+    { label: "本周", summary: summarizeBets(bets, startOfWeek(now)) },
+    { label: "本月", summary: summarizeBets(bets, new Date(now.getFullYear(), now.getMonth(), 1)) }
+  ];
   return (
     <section className="stats-layout">
-      <Metric label="投注数" value={stats.bets} />
-      <Metric label="总投入" value={`￥${stats.stake}`} />
-      <Metric label="总盈亏" value={`￥${stats.profit}`} tone={Number(stats.profit) >= 0 ? "positive" : "negative"} />
-      <Metric label="ROI" value={`${(Number(stats.roi) * 100).toFixed(2)}%`} />
+      {periods.map((period) => (
+        <div className="period-card" key={period.label}>
+          <h2>{period.label}</h2>
+          <div className="period-metrics">
+            <Metric label="总投注手数" value={period.summary.count} />
+            <Metric label="总投入" value={currency(period.summary.stake)} />
+            <Metric label="总盈亏" value={currency(period.summary.profit)} tone={period.summary.profit >= 0 ? "positive" : "negative"} />
+          </div>
+        </div>
+      ))}
       <BucketTable title="按运动" rows={stats.by_sport} />
       <BucketTable title="按平台" rows={stats.by_platform} />
       <BucketTable title="按类型" rows={stats.by_kind} />
