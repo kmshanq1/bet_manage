@@ -170,6 +170,17 @@ function summarizeBets(bets: Bet[], from: Date) {
   );
 }
 
+function summarizeWinRate(bets: Bet[]) {
+  return bets.reduce(
+    (summary, bet) => {
+      if (bet.status === "won" || bet.status === "half_won") return { ...summary, wins: summary.wins + 1 };
+      if (bet.status === "lost" || bet.status === "half_lost") return { ...summary, losses: summary.losses + 1 };
+      return summary;
+    },
+    { wins: 0, losses: 0 }
+  );
+}
+
 function currency(value: number) {
   return `￥${value.toFixed(2)}`;
 }
@@ -518,6 +529,9 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
 function StatsPanel({ stats, bets }: { stats: Stats | null; bets: Bet[] }) {
   if (!stats) return null;
   const now = new Date();
+  const winRate = summarizeWinRate(bets);
+  const settledCount = winRate.wins + winRate.losses;
+  const winPercent = settledCount ? Math.round((winRate.wins / settledCount) * 100) : 0;
   const periods = [
     { label: "当日", summary: summarizeBets(bets, startOfDay(now)) },
     { label: "本周", summary: summarizeBets(bets, startOfWeek(now)) },
@@ -525,16 +539,30 @@ function StatsPanel({ stats, bets }: { stats: Stats | null; bets: Bet[] }) {
   ];
   return (
     <section className="stats-layout">
-      {periods.map((period) => (
-        <div className="period-card" key={period.label}>
-          <h2>{period.label}</h2>
-          <div className="period-metrics">
-            <Metric label="总投注手数" value={period.summary.count} />
-            <Metric label="总投入" value={currency(period.summary.stake)} />
-            <Metric label="总盈亏" value={currency(period.summary.profit)} tone={period.summary.profit >= 0 ? "positive" : "negative"} />
+      <div className="stats-overview">
+        <div className="period-cards">
+          {periods.map((period) => (
+            <div className="period-card" key={period.label}>
+              <h2>{period.label}</h2>
+              <div className="period-metrics">
+                <Metric label="总投注手数" value={period.summary.count} />
+                <Metric label="总投入" value={currency(period.summary.stake)} />
+                <Metric label="总盈亏" value={currency(period.summary.profit)} tone={period.summary.profit >= 0 ? "positive" : "negative"} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="win-rate-card">
+          <h2>胜率</h2>
+          <div className="pie" style={{ "--win": `${winPercent}%` } as React.CSSProperties}>
+            <span>{winPercent}%</span>
+          </div>
+          <div className="win-rate-legend">
+            <span><i className="win-dot" />赢 {winRate.wins}</span>
+            <span><i className="loss-dot" />输 {winRate.losses}</span>
           </div>
         </div>
-      ))}
+      </div>
       <BucketTable title="按运动" rows={stats.by_sport} />
       <BucketTable title="按平台" rows={stats.by_platform} />
       <BucketTable title="按类型" rows={stats.by_kind} />
