@@ -519,7 +519,7 @@ function StatsPanel({ stats, bets }: { stats: Stats | null; bets: Bet[] }) {
   if (!stats) return null;
   const now = new Date();
   const periods = [
-    { label: "单日", summary: summarizeBets(bets, startOfDay(now)) },
+    { label: "当日", summary: summarizeBets(bets, startOfDay(now)) },
     { label: "本周", summary: summarizeBets(bets, startOfWeek(now)) },
     { label: "本月", summary: summarizeBets(bets, new Date(now.getFullYear(), now.getMonth(), 1)) }
   ];
