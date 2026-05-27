@@ -88,11 +88,13 @@ type BetDraft = {
   odds: string;
   stake: string;
   platform: string;
-  status: BetStatus;
+  status: BetDraftStatus;
   pre_match_thoughts: string;
   tag_names: string;
   legs: string;
 };
+
+type BetDraftStatus = BetStatus | "";
 
 function todayDateInputValue() {
   const now = new Date();
@@ -102,8 +104,31 @@ function todayDateInputValue() {
   return `${year}-${month}-${day}`;
 }
 
+function calculateDraftProfit(stakeValue: string, oddsValue: string, status: BetDraftStatus) {
+  const stake = Number(stakeValue);
+  const odds = Number(oddsValue);
+  if (!stakeValue || !oddsValue || !status || Number.isNaN(stake) || Number.isNaN(odds)) return "";
+
+  let profit = 0;
+  if (status === "won") profit = stake * (odds - 1);
+  if (status === "lost") profit = -stake;
+  if (status === "pushed" || status === "void") profit = 0;
+  if (status === "half_won") profit = (stake * (odds - 1)) / 2;
+  if (status === "half_lost") profit = -stake / 2;
+  return profit.toFixed(2);
+}
+
 const statusLabels: Record<BetStatus, string> = {
   pending: "待结算",
+  won: "赢",
+  lost: "输",
+  pushed: "走水",
+  void: "取消",
+  half_won: "赢半",
+  half_lost: "输半"
+};
+
+const resultLabels: Record<Exclude<BetStatus, "pending">, string> = {
   won: "赢",
   lost: "输",
   pushed: "走水",
@@ -123,7 +148,7 @@ function createEmptyDraft(): BetDraft {
     odds: "1.900",
     stake: "100",
     platform: "",
-    status: "pending",
+    status: "",
     pre_match_thoughts: "",
     tag_names: "",
     legs: ""
@@ -272,9 +297,11 @@ function Login({ onLogin }: { onLogin: (token: string) => void }) {
 function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<typeof api>; reload: () => Promise<void> }) {
   const [draft, setDraft] = useState<BetDraft>(() => createEmptyDraft());
   const [review, setReview] = useState<Record<number, string>>({});
+  const draftProfit = calculateDraftProfit(draft.stake, draft.odds, draft.status);
 
   async function createBet(event: React.FormEvent) {
     event.preventDefault();
+    if (!draft.status) return;
     const legs = draft.kind === "parlay"
       ? draft.legs.split("\n").filter(Boolean).map((line) => {
           const [sport, event_name, market, selection, odds] = line.split("|").map((item) => item.trim());
@@ -286,6 +313,7 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
       body: JSON.stringify({
         ...draft,
         selection: draft.selection || "-",
+        status: draft.status,
         placed_at: draft.placed_at ? new Date(`${draft.placed_at}T00:00:00`).toISOString() : new Date().toISOString(),
         tag_names: [],
         legs
@@ -323,8 +351,9 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
         </div>
         <div className="form-row">
           <label>信息来源<input value={draft.event_name} onChange={(event) => setDraft({ ...draft, event_name: event.target.value })} /></label>
-          <label>状态<select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as BetStatus })}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label>赛果<select required value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as BetDraftStatus })}><option value="">请选择</option>{Object.entries(resultLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         </div>
+        <label>盈亏<input readOnly value={draftProfit} placeholder="自动计算" /></label>
         <label>备注<textarea value={draft.pre_match_thoughts} onChange={(event) => setDraft({ ...draft, pre_match_thoughts: event.target.value })} /></label>
         {draft.kind === "parlay" && <label>串关明细<textarea placeholder="运动|赛事|盘口|选择|赔率，每行一个" value={draft.legs} onChange={(event) => setDraft({ ...draft, legs: event.target.value })} /></label>}
         <button className="primary" type="submit">保存投注</button>
