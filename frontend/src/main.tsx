@@ -94,6 +94,14 @@ type BetDraft = {
   legs: string;
 };
 
+function todayDateInputValue() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 const statusLabels: Record<BetStatus, string> = {
   pending: "待结算",
   won: "赢",
@@ -104,21 +112,23 @@ const statusLabels: Record<BetStatus, string> = {
   half_lost: "输半"
 };
 
-const emptyDraft: BetDraft = {
-  kind: "single",
-  sport: "足球",
-  placed_at: "",
-  event_name: "",
-  market: "欧盘",
-  selection: "",
-  odds: "1.900",
-  stake: "100",
-  platform: "",
-  status: "pending",
-  pre_match_thoughts: "",
-  tag_names: "",
-  legs: ""
-};
+function createEmptyDraft(): BetDraft {
+  return {
+    kind: "single",
+    sport: "足球",
+    placed_at: todayDateInputValue(),
+    event_name: "",
+    market: "欧盘",
+    selection: "",
+    odds: "1.900",
+    stake: "100",
+    platform: "",
+    status: "pending",
+    pre_match_thoughts: "",
+    tag_names: "",
+    legs: ""
+  };
+}
 
 function api(token: string | null) {
   return async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
@@ -260,7 +270,7 @@ function Login({ onLogin }: { onLogin: (token: string) => void }) {
 }
 
 function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<typeof api>; reload: () => Promise<void> }) {
-  const [draft, setDraft] = useState<BetDraft>(emptyDraft);
+  const [draft, setDraft] = useState<BetDraft>(() => createEmptyDraft());
   const [review, setReview] = useState<Record<number, string>>({});
 
   async function createBet(event: React.FormEvent) {
@@ -281,7 +291,7 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
         legs
       })
     });
-    setDraft(emptyDraft);
+    setDraft(createEmptyDraft());
     await reload();
   }
 
@@ -302,7 +312,7 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
     <div className="ledger-grid">
       <form className="panel bet-form" onSubmit={createBet}>
         <h2><Plus size={18} /> 新增投注</h2>
-        <label>投注日期<input type="date" value={draft.placed_at} onChange={(event) => setDraft({ ...draft, placed_at: event.target.value })} /></label>
+        <label>投注日期<input required type="date" value={draft.placed_at} onChange={(event) => setDraft({ ...draft, placed_at: event.target.value })} /></label>
         <div className="form-row">
           <label>投注类型<select value={draft.market} onChange={(event) => setDraft({ ...draft, market: event.target.value })}><option value="欧盘">欧盘</option><option value="亚盘">亚盘</option><option value="大小">大小</option><option value="角球">角球</option><option value="其他">其他</option></select></label>
           <label>比赛类型<select value={draft.sport} onChange={(event) => setDraft({ ...draft, sport: event.target.value })}><option value="足球">足球</option><option value="篮球">篮球</option><option value="其他">其他</option></select></label>
@@ -312,10 +322,7 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
           <label>赔率<input required type="number" step="0.001" value={draft.odds} onChange={(event) => setDraft({ ...draft, odds: event.target.value })} /></label>
           <label>金额<input required type="number" step="0.01" value={draft.stake} onChange={(event) => setDraft({ ...draft, stake: event.target.value })} /></label>
         </div>
-        <div className="form-row">
-          <label>平台<input value={draft.platform} onChange={(event) => setDraft({ ...draft, platform: event.target.value })} /></label>
-          <label>状态<select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as BetStatus })}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-        </div>
+        <label>状态<select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value as BetStatus })}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         <label>备注<textarea value={draft.pre_match_thoughts} onChange={(event) => setDraft({ ...draft, pre_match_thoughts: event.target.value })} /></label>
         {draft.kind === "parlay" && <label>串关明细<textarea placeholder="运动|赛事|盘口|选择|赔率，每行一个" value={draft.legs} onChange={(event) => setDraft({ ...draft, legs: event.target.value })} /></label>}
         <button className="primary" type="submit">保存投注</button>
