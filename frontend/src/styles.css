@@ -635,11 +635,6 @@ button:disabled {
   background: #f05252;
 }
 
-.bucket {
-  grid-column: span 1;
-}
-
-.bucket-row,
 .user-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 80px 110px;
@@ -649,16 +644,141 @@ button:disabled {
   border-top: 1px solid rgba(224, 229, 243, 0.82);
 }
 
-.bucket-row b {
-  font-variant-numeric: tabular-nums;
-}
-
 .user-row {
   grid-template-columns: minmax(0, 1fr) 80px minmax(140px, 1fr) 110px 90px;
 }
 
 .user-row input {
   min-height: 38px;
+}
+
+.chart-card {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(76, 88, 145, 0.16);
+  padding: 16px;
+  backdrop-filter: blur(18px);
+}
+
+.chart-card h2 {
+  margin: 0 0 12px;
+  color: #151b2d;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.volume-chart {
+  grid-column: span 1;
+}
+
+.profit-line-card {
+  grid-column: span 2;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 12px;
+  color: #606a83;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.chart-legend span {
+  align-items: center;
+  display: flex;
+  gap: 5px;
+}
+
+.chart-legend i {
+  border-radius: 999px;
+  display: inline-block;
+  height: 8px;
+  width: 8px;
+}
+
+.football-dot,
+.bar-football {
+  background: #5774df;
+}
+
+.basketball-dot,
+.bar-basketball {
+  background: #48e96d;
+}
+
+.stacked-bars {
+  align-items: end;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(20, minmax(14px, 1fr));
+  min-height: 210px;
+}
+
+.bar-day {
+  align-items: center;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.bar-track {
+  align-items: end;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(224, 229, 243, 0.9);
+  border-radius: 999px;
+  display: flex;
+  flex-direction: column-reverse;
+  height: 170px;
+  justify-content: flex-start;
+  overflow: hidden;
+  width: 100%;
+}
+
+.bar-track span {
+  display: block;
+  width: 100%;
+}
+
+.bar-day small,
+.line-axis small {
+  color: #69718a;
+  font-size: 10px;
+  font-weight: 800;
+  writing-mode: vertical-rl;
+}
+
+.profit-line {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(224, 229, 243, 0.9);
+  border-radius: 16px;
+  height: 220px;
+  overflow: visible;
+  padding: 10px;
+  width: 100%;
+}
+
+.profit-line line {
+  stroke: rgba(105, 113, 138, 0.28);
+  stroke-width: 1;
+}
+
+.profit-line polyline {
+  fill: none;
+  stroke: #5774df;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.line-axis {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(20, minmax(14px, 1fr));
+  margin-top: 8px;
+  text-align: center;
 }
 
 @media (max-width: 980px) {
@@ -702,7 +822,8 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .bucket {
+  .volume-chart,
+  .profit-line-card {
     grid-column: span 1;
   }
 }

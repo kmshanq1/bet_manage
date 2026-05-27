@@ -105,11 +105,7 @@ type BetEditDraft = {
 };
 
 function todayDateInputValue() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return todayDateInputValueFromDate(new Date());
 }
 
 function calculateDraftProfit(stakeValue: string, oddsValue: string, status: BetDraftStatus) {
@@ -179,6 +175,40 @@ function summarizeWinRate(bets: Bet[]) {
     },
     { wins: 0, losses: 0 }
   );
+}
+
+function lastTwentyDays() {
+  const today = startOfDay(new Date());
+  return Array.from({ length: 20 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - 19 + index);
+    return date;
+  });
+}
+
+function shortDateLabel(date: Date) {
+  return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function dailyChartData(bets: Bet[]) {
+  return lastTwentyDays().map((date) => {
+    const key = todayDateInputValueFromDate(date);
+    const rows = bets.filter((bet) => todayDateInputValueFromDate(new Date(bet.placed_at)) === key);
+    return {
+      key,
+      label: shortDateLabel(date),
+      football: rows.filter((bet) => bet.sport === "足球").length,
+      basketball: rows.filter((bet) => bet.sport === "篮球").length,
+      profit: rows.reduce((sum, bet) => sum + Number(bet.profit || 0), 0)
+    };
+  });
+}
+
+function todayDateInputValueFromDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function currency(value: number) {
@@ -535,6 +565,14 @@ function Ledger({ bets, request, reload }: { bets: Bet[]; request: ReturnType<ty
 function StatsPanel({ stats, bets }: { stats: Stats | null; bets: Bet[] }) {
   if (!stats) return null;
   const now = new Date();
+  const chartData = dailyChartData(bets);
+  const maxDailyCount = Math.max(...chartData.map((day) => day.football + day.basketball), 1);
+  const maxProfit = Math.max(...chartData.map((day) => Math.abs(day.profit)), 1);
+  const linePoints = chartData.map((day, index) => {
+    const x = chartData.length === 1 ? 0 : (index / (chartData.length - 1)) * 100;
+    const y = 50 - (day.profit / maxProfit) * 42;
+    return `${x},${y}`;
+  }).join(" ");
   const winRateItems = [
     { label: "总胜率", value: summarizeWinRate(bets) },
     { label: "足球", value: summarizeWinRate(bets.filter((bet) => bet.sport === "足球")) },
@@ -582,31 +620,42 @@ function StatsPanel({ stats, bets }: { stats: Stats | null; bets: Bet[] }) {
           </div>
         </div>
       </div>
-      <BucketTable title="按运动" rows={stats.by_sport} />
-      <BucketTable title="按平台" rows={stats.by_platform} />
-      <BucketTable title="按类型" rows={stats.by_kind} />
-      {stats.by_user.length > 0 && <BucketTable title="按用户" rows={stats.by_user} />}
+      <div className="chart-card volume-chart">
+        <h2>20天投注手数</h2>
+        <div className="chart-legend"><span><i className="football-dot" />足球</span><span><i className="basketball-dot" />篮球</span></div>
+        <div className="stacked-bars">
+          {chartData.map((day) => {
+            const total = day.football + day.basketball;
+            const footballHeight = total ? (day.football / maxDailyCount) * 100 : 0;
+            const basketballHeight = total ? (day.basketball / maxDailyCount) * 100 : 0;
+            return (
+              <div className="bar-day" key={day.key}>
+                <div className="bar-track" title={`${day.label} 足球 ${day.football} 篮球 ${day.basketball}`}>
+                  <span className="bar-football" style={{ height: `${footballHeight}%` }} />
+                  <span className="bar-basketball" style={{ height: `${basketballHeight}%` }} />
+                </div>
+                <small>{day.label}</small>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="chart-card profit-line-card">
+        <h2>20天总盈亏</h2>
+        <svg className="profit-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <line x1="0" x2="100" y1="50" y2="50" />
+          <polyline points={linePoints} />
+        </svg>
+        <div className="line-axis">
+          {chartData.map((day) => <small key={day.key}>{day.label}</small>)}
+        </div>
+      </div>
     </section>
   );
 }
 
 function Metric({ label, value, tone }: { label: string; value: string | number; tone?: string }) {
   return <div className="metric"><span>{label}</span><strong className={tone}>{value}</strong></div>;
-}
-
-function BucketTable({ title, rows }: { title: string; rows: Bucket[] }) {
-  return (
-    <div className="panel bucket">
-      <h2>{title}</h2>
-      {rows.map((row) => (
-        <div className="bucket-row" key={row.key}>
-          <span>{row.key}</span>
-          <span>{row.bets} 注</span>
-          <b className={Number(row.profit) >= 0 ? "positive" : "negative"}>￥{row.profit}</b>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 function AdminPanel({ users, request, reload }: { users: User[]; request: ReturnType<typeof api>; reload: () => Promise<void> }) {
