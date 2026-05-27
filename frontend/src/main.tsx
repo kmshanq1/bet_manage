@@ -223,7 +223,8 @@ function App() {
   useEffect(() => {
     loadAll().catch((error) => {
       setMessage(error.message);
-      if (error.message.includes("token") || error.message.includes("Inactive")) {
+      const authError = error.message.toLowerCase();
+      if (authError.includes("token") || authError.includes("inactive")) {
         localStorage.removeItem("token");
         setToken(null);
       }
@@ -233,6 +234,7 @@ function App() {
   if (!token) {
     return <Login onLogin={(nextToken) => {
       localStorage.setItem("token", nextToken);
+      setMessage("");
       setToken(nextToken);
     }} />;
   }
@@ -521,6 +523,7 @@ function BucketTable({ title, rows }: { title: string; rows: Bucket[] }) {
 function AdminPanel({ users, request, reload }: { users: User[]; request: ReturnType<typeof api>; reload: () => Promise<void> }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [resetPasswords, setResetPasswords] = useState<Record<number, string>>({});
 
   async function createUser(event: React.FormEvent) {
     event.preventDefault();
@@ -532,6 +535,14 @@ function AdminPanel({ users, request, reload }: { users: User[]; request: Return
 
   async function toggleUser(user: User) {
     await request(`/users/${user.id}`, { method: "PATCH", body: JSON.stringify({ is_active: !user.is_active }) });
+    await reload();
+  }
+
+  async function resetPassword(user: User) {
+    const nextPassword = resetPasswords[user.id]?.trim();
+    if (!nextPassword) return;
+    await request(`/users/${user.id}`, { method: "PATCH", body: JSON.stringify({ password: nextPassword }) });
+    setResetPasswords({ ...resetPasswords, [user.id]: "" });
     await reload();
   }
 
@@ -549,6 +560,14 @@ function AdminPanel({ users, request, reload }: { users: User[]; request: Return
           <div className="user-row" key={user.id}>
             <span>{user.username}</span>
             <small>{user.role}</small>
+            <input
+              minLength={8}
+              placeholder="新密码"
+              type="password"
+              value={resetPasswords[user.id] ?? ""}
+              onChange={(event) => setResetPasswords({ ...resetPasswords, [user.id]: event.target.value })}
+            />
+            <button className="secondary" type="button" disabled={(resetPasswords[user.id] ?? "").trim().length < 8} onClick={() => resetPassword(user)}>重置密码</button>
             <button className="secondary" type="button" onClick={() => toggleUser(user)}>{user.is_active ? "禁用" : "启用"}</button>
           </div>
         ))}

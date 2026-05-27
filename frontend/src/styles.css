@@ -384,7 +384,11 @@ button:disabled {
 }
 
 .user-row {
-  grid-template-columns: minmax(0, 1fr) 80px 90px;
+  grid-template-columns: minmax(0, 1fr) 80px minmax(140px, 1fr) 110px 90px;
+}
+
+.user-row input {
+  min-height: 38px;
 }
 
 @media (max-width: 980px) {
@@ -443,7 +447,12 @@ button:disabled {
   }
 
   .table-footer > div,
-  .pager {
+  .pager,
+  .user-row {
     justify-content: space-between;
+  }
+
+  .user-row {
+    grid-template-columns: 1fr;
   }
 }
