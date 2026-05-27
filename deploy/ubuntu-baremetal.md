@@ -88,7 +88,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-Then visit `https://your-intranet-host`.
+Then visit `https://your-intranet-host`. The bundled Nginx config also keeps plain HTTP available for embedded browsers or tools that cannot bypass a self-signed certificate warning.
 
 For an IP-only intranet deployment, create a self-signed certificate before reloading Nginx:
 
